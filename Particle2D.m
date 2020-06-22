@@ -5,7 +5,7 @@ clc; clear all;
 %dt - Time step in secs
 %sigma_acc - SD of acceleration ms-2
 %sigma_gps - SD of GPS measurement m
-dur = 30;
+dur = 20;
 dt = 0.1;
 sigma_acc = 0.5;
 sigma_dis = 2;
@@ -20,14 +20,22 @@ xhat = x;               %Initial extimate
 R = diag([sigma_dis^2 sigma_dis^2]);        %Measurement noise cov mat
 Q = sigma_acc^2*[dt^4/4 dt^3/2 0 0; dt^3/2 dt^2 0 0; 0 0 dt^4/4 dt^3/2;...
     0 0 dt^3/2 dt^2];                       %Process noise cov mat
-P = Q;
+P = Q;      %State error cov matrix
 
-for t=1:dt:dur
+%Parameters for plotting
+pos = [];
+posmeas=[];
+poshat=[];
+vel=[];
+velmeas=[];
+velhat=[];
+
+for t=0:dt:dur
     %Input forcing function
     u = [1+sin(t); 2+5*sin(t)];
     
     %Process noise model
-    processnoise = sigma_acc*[dt^2/2*randn 0; dt*randn 0; 0 dt^2/2*randn; 0 dt*randn];
+    processnoise = sigma_acc*[dt^2/2*randn; dt*randn; dt^2/2*randn; dt*randn];
     x = A*x +B*u + processnoise;
     
     %Measurement noise model
@@ -57,7 +65,34 @@ for t=1:dt:dur
     n = length(K*H);
     P = (eye(n) - K*H)*P;
     
-    
+    pos = [pos; x(1), x(3)];
+    posmeas = [posmeas; y(1), y(2)];
+    poshat = [poshat; xhat(1), xhat(3)];
+    vel = [vel; x(2), x(4)];
+    velhat = [velhat; xhat(2), xhat(4)];
     
 end
+
+t = 0:dt:dur;
+figure()
+plot(t,vel(:,1), t, velhat(:,1));
+legend('Actual velocity', 'Estimated velocity')
+xlabel('Time/ secs'); ylabel('Velocity/ cm s^-1')
+title('Variation of actual and estimated x-axis velocity');
+grid on;
+figure()
+plot(t,vel(:,2), t, velhat(:,2))
+legend('Actual velocity', 'Estimated velocity')
+xlabel('Time/ secs'); ylabel('Velocity/ cm s^-1')
+title('Variation of actual and estimated y-axis velocity');
+grid on;
+
+figure()
+plot(pos(:,1), pos(:,2), poshat(:,1), poshat(:,2),'g','LineWidth',1.5)
+hold on;
+scatter(posmeas(:,1), posmeas(:,2), 3,'r','filled')
+legend('Actual position', 'Estimated position', 'Measured position')
+xlabel('x-axis position/ cm'); ylabel('y-axis position/ cm')
+title('Variation of position of particle');
+grid on;
     
