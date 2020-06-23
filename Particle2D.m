@@ -35,8 +35,8 @@ for t=0:dt:dur
     u = [1+sin(t); 2+5*sin(t)];
     
     %Process noise model
-    processnoise = sigma_acc*[dt^2/2*randn; dt*randn; dt^2/2*randn; dt*randn];
-    x = A*x +B*u + processnoise;
+    processnoise = sigma_acc*[randn; randn];
+    x = A*x +B*(u +processnoise);
     
     %Measurement noise model
     measnoise = sigma_dis*[randn; randn];
