@@ -5,7 +5,7 @@ clc; clear all;
 %dt - Time step in secs
 %sigma_acc - SD of acceleration ms-2
 %sigma_gps - SD of GPS measurement m
-dur = 20;
+dur = 10;
 dt = 0.1;
 sigma_acc = 0.5;
 sigma_dis = 2;
@@ -65,6 +65,7 @@ for t=0:dt:dur
     n = length(K*H);
     P = (eye(n) - K*H)*P;
     
+    %Parameters for plotting
     pos = [pos; x(1), x(3)];
     posmeas = [posmeas; y(1), y(2)];
     poshat = [poshat; xhat(1), xhat(3)];
@@ -73,6 +74,7 @@ for t=0:dt:dur
     
 end
 
+%% Plots
 t = 0:dt:dur;
 figure()
 plot(t,vel(:,1), t, velhat(:,1));
@@ -90,7 +92,7 @@ grid on;
 figure()
 plot(pos(:,1), pos(:,2), poshat(:,1), poshat(:,2),'g','LineWidth',1.5)
 hold on;
-scatter(posmeas(:,1), posmeas(:,2), 3,'r','filled')
+scatter(posmeas(:,1), posmeas(:,2), 5,'r','filled')
 legend('Actual position', 'Estimated position', 'Measured position')
 xlabel('x-axis position/ cm'); ylabel('y-axis position/ cm')
 title('Variation of position of particle');
