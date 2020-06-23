@@ -5,27 +5,26 @@ clc; clear all;
 % dt - time step (secs)
 % phi - angle of turn (radians)
 %L = length of robot (cm)
-dur = 30;
-dt = 0.1;
+dur = 300;
+dt = 0.2;
 phi = 0.1;
 L = 5;
 
 %Noise parameters
-measnois_dis = 4;      %Measurement noise of distances
-measnois_ang = 0.1;     %Measurement noise of angle in radians
-velnois =2;          %Velocity input noise
-u = 10;     %Velocity of 10 cm/s
+measnois_dis = 4;       %SD of distance Measurement noise
+measnois_ang = 0.1;     %SD of angle Measurement noise
+velnois = 0.7;             %SD of Velocity input noise
+% u = 10;     %Velocity of 10 cm/s
 
 %System model
 x = [0;0;0];    %Initial condition
 xhat = [0;0;0]; %Initial estimatd
 A = eye(3);     %System matrix
-B = [dt*cos(x(3)); dt*sin(x(3)); tan(phi)*dt/L];    %Input matrix
+B = diag([dt; dt; tan(phi)*dt/L]);    %Input matrix
 C = eye(3);     %Output matrix
 
-R = diag([measnois_dis^2, measnois_dis^2, measnois_ang^2]);  %Measurement noise cov mat
-Q = velnois^2 * [dt^2, dt^2, tan(phi)*dt^2/L; dt^2, dt^2, tan(phi)*dt^2/L;...
-    tan(phi)*dt^2/L, tan(phi)*dt^2/L, (tan(phi)*dt/L)^2];     %Process noise cov mat
+R = diag([measnois_dis^2, measnois_dis^2, measnois_ang^2]);  %Measurement noise cov mat 
+Q = diag([(velnois*dt)^2, (velnois*dt)^2, (velnois*dt)^2*tan(phi)/L]);  %Process noise cov mat
 P = Q;      % State/Error covariance matrix
 
 %Plotting parameters
@@ -34,9 +33,9 @@ poshat = [];
 posmeas = [];
 
 for t = 1:dt:dur
-    B = [dt*cos(x(3)); dt*sin(x(3)); tan(phi)*dt/L];
+    u = [cos(x(3)); sin(x(3)); 1];
     %Process noisy model
-    processnois = velnois* [dt*cos(x(3))*randn; dt*sin(x(3))*randn; dt*tan(phi)*randn/L];
+    processnois = velnois* [dt*cos(measnois_ang)*randn; dt*sin(measnois_ang)*randn; dt*tan(phi)*randn/L];
     x = A*x + B*u + processnois;
     
     %Measurement noisy model
@@ -81,7 +80,7 @@ figure();
 plot(pos(:,1),pos(:,2),'color',[0, 0, 1],'Linewidth', 1.5)
 hold on
 plot(poshat(:,1),poshat(:,2),'g-', 'Linewidth', 1.5)
-scatter(posmeas(:,1), posmeas(:,2),10,'r','filled')
+scatter(posmeas(:,1), posmeas(:,2),5,'r','filled')
 legend('Actual position', 'Estimated position','Measured position');
 xlabel('x axis position/ cm');
 ylabel('y axis position/ cm');
@@ -89,7 +88,7 @@ title('Position of Ackerman steering robot')
 grid on;
 
 figure()
-plot(t, pos(:,3), 'b-', t, poshat(:,3), 'g-', t, posmeas(:,3),'ro', 'MarkerSize',2);
+plot(t, pos(:,3), 'b-', t, poshat(:,3), 'g-', t, posmeas(:,3),'ro', 'MarkerSize',1);
 legend('Actual angle', 'Estimated angle','Measured angle');
 xlabel('Time/ secs');
 ylabel('Angle \theta/ rad');
